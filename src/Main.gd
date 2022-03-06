@@ -7,6 +7,7 @@ var stack_offset
 func _ready():
 	create_discs()
 	build_stack(8)
+	move_disc(0, 1)
 
 
 func create_discs():
@@ -47,7 +48,9 @@ func move_disc(from_peg, to_peg):
 	disc = start_peg.get_children()[-1]
 	start_pos = disc.translation
 	var end_peg = $Pegs.get_child(to_peg)
-	end_pos = Vector2(end_peg.translation.x, get_y_position_in_stack(end_peg.get_child_count()))
+	end_pos = Vector2(start_peg.translation.x - end_peg.translation.x, get_y_position_in_stack(end_peg.get_child_count()))
+	var x = (start_pos.x - end_pos.x) / 2
+	radius = sqrt(x * x + peg_length * peg_length)
 	var tween = get_node("Tween")
 	var _tweenBool = tween.interpolate_method(self, "set_disc_position", 0.0, PI, 5.0, Tween.TRANS_LINEAR, Tween.EASE_IN_OUT)
 	tween.start()
@@ -62,4 +65,4 @@ func set_disc_position(phi):
 		x = -clamp(radius * cos(phi), end_pos.x, start_pos.x)
 	else:
 		x = clamp(radius * cos(phi), start_pos.x, end_pos.x)
-	disc.translation = Vector2(x, y)
+	disc.translation = Vector3(x, y, 0)
