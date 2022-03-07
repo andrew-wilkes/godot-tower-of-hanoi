@@ -9,7 +9,7 @@ albedo_color = Color( 0.27451, 0.14902, 0.14902, 1 )
 script = ExtResource( 2 )
 
 [node name="Camera" type="Camera" parent="."]
-transform = Transform( 1, 0, 0, 0, 0.876786, 0.480882, 0, -0.480882, 0.876786, 0.301, 5.562, 7.64 )
+transform = Transform( 1, 0, 0, 0, 0.906308, 0.422619, 0, -0.422619, 0.906308, 0.301, 5.626, 7.64 )
 fov = 40.1
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]

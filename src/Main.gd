@@ -1,13 +1,23 @@
 extends Spatial
 
+signal move_completed
+
 var disc_scene = preload("res://Disc.tscn")
 var discs = []
 var stack_offset
+var step = 0
 
 func _ready():
 	create_discs()
 	build_stack(8)
+	connect("move_completed", self, "move_completed")
 	move_disc(0, 1)
+
+
+func move_completed():
+	step += 1
+	if step == 1:
+		move_disc(1, 0)
 
 
 func create_discs():
@@ -39,30 +49,40 @@ func get_y_position_in_stack(disc_index): # 0 is the base, 1, 2, 3 ...
 var start_pos
 var end_pos
 var disc
-var radius
 var peg_length
+
+const SPEED = 20.0
 
 func move_disc(from_peg, to_peg):
 	# Get top-most disc
 	var start_peg = $Pegs.get_child(from_peg)
 	disc = start_peg.get_children()[-1]
+	var tween = get_node("Tween")
+	# Move to top of pole
+	var y = disc.translation.y
+	var _tweenBool = tween.interpolate_method(self, "move_vertically", y, peg_length / 2 + 0.2, (peg_length - y) / SPEED, Tween.TRANS_LINEAR, Tween.EASE_IN)
+	tween.start()
+	yield(tween, "tween_completed")
 	start_pos = disc.translation
 	var end_peg = $Pegs.get_child(to_peg)
-	end_pos = Vector2(start_peg.translation.x - end_peg.translation.x, get_y_position_in_stack(end_peg.get_child_count()))
-	var x = (start_pos.x - end_pos.x) / 2
-	radius = sqrt(x * x + peg_length * peg_length)
-	var tween = get_node("Tween")
-	var _tweenBool = tween.interpolate_method(self, "set_disc_position", 0.0, PI, 5.0, Tween.TRANS_LINEAR, Tween.EASE_IN_OUT)
-	tween.start()
+	end_pos = Vector2(end_peg.translation.x - start_peg.translation.x, get_y_position_in_stack(end_peg.get_child_count()))
+	var angle = PI if end_pos.x > 0 else -PI
+	_tweenBool = tween.interpolate_method(self, "move_in_arc", 0.0, angle, angle * end_pos.x / SPEED, Tween.TRANS_LINEAR, Tween.EASE_OUT_IN)
+	yield(tween, "tween_completed")
+	_tweenBool = tween.interpolate_method(self, "move_vertically", disc.translation.y, end_pos.y, (peg_length - end_pos.y) / SPEED, Tween.TRANS_LINEAR, Tween.EASE_OUT)
+	yield(tween, "tween_completed")
+	# Reparent disc
+	start_peg.remove_child(disc)
+	end_peg.add_child(disc)
+	disc.translation.x = 0
+	emit_signal("move_completed")
 
 
-func set_disc_position(phi):
-	var x
-	var y = radius * sin(phi)
-	if phi > 1.5 and y < end_pos.y:
-			return
-	if start_pos.x > end_pos.x:	
-		x = -clamp(radius * cos(phi), end_pos.x, start_pos.x)
-	else:
-		x = clamp(radius * cos(phi), start_pos.x, end_pos.x)
+func move_vertically(y):
+	disc.translation.y = y
+
+
+func move_in_arc(phi):
+	var x = end_pos.x * (1 - cos(phi)) / 2
+	var y = end_pos.x / 2 * sin(phi) + start_pos.y
 	disc.translation = Vector3(x, y, 0)
