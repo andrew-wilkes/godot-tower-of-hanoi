@@ -2,13 +2,14 @@ extends Spatial
 
 signal move_completed
 
-const NUM_DISCS = 8
+const NUM_DISCS = 3
 
 var disc_scene = preload("res://Disc.tscn")
 var discs = []
 var stack_offset
 var stacks = [[], [], []]
 var last_move = -1
+var paused = false
 
 func _ready():
 	create_discs()
@@ -29,8 +30,8 @@ func make_move():
 		var smallest_value = INF
 		var smallest_idx = 0
 		var empty_idx = -1
-		var larger_value = INF
-		var larger_idx = -1
+		var next_value = INF
+		var next_idx = -1
 		# Scan stacks
 		for i in 3:
 			# Find empty peg
@@ -43,22 +44,21 @@ func make_move():
 				if v < smallest_value:
 					smallest_idx = i
 					smallest_value = v
-		if empty_idx >= 0:
-			# Move to empty peg
-			move_disc(smallest_idx, empty_idx)
-			return
 		# Find next smallest disc
 		for i in 3:
-			var v = stacks[i][-1]
-			if v > smallest_value and v < larger_value:
-				larger_value = v
-				larger_idx = i
+			if i != empty_idx:
+				var v = stacks[i][-1]
+				if v > smallest_value and v < next_value:
+					next_value = v
+					next_idx = i
+		if next_idx < 0:
+			next_idx = empty_idx
 		# Place on larger disc
-		move_disc(smallest_idx, larger_idx)
+		move_disc(smallest_idx, next_idx)
 
 
 func move_completed():
-	if stacks[2].size() < NUM_DISCS:
+	if stacks[2].size() < NUM_DISCS and not paused:
 		make_move()
 
 
@@ -131,3 +131,9 @@ func move_in_arc(phi):
 	var x = end_pos.x * (1 - cos(phi)) / 2
 	var y = end_pos.x / 3 * sin(phi) + start_pos.y
 	disc.translation = Vector3(x, y, 0)
+
+
+func _unhandled_key_input(event):
+	paused = event.pressed
+	if not paused:
+		make_move()

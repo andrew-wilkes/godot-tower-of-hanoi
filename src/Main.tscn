@@ -40,3 +40,15 @@ radius = 0.2
 height = 4.0
 
 [node name="Tween" type="Tween" parent="."]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="UI"]
+margin_left = 14.0
+margin_top = 12.0
+margin_right = 155.0
+margin_bottom = 26.0
+text = "Hold any key to pause"
+__meta__ = {
+"_edit_use_anchors_": false
+}
