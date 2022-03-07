@@ -2,22 +2,64 @@ extends Spatial
 
 signal move_completed
 
+const NUM_DISCS = 8
+
 var disc_scene = preload("res://Disc.tscn")
 var discs = []
 var stack_offset
-var step = 0
+var stacks = [[], [], []]
+var last_move = -1
 
 func _ready():
 	create_discs()
-	build_stack(8)
-	connect("move_completed", self, "move_completed")
-	move_disc(0, 1)
+	build_stack(NUM_DISCS)
+	var _e = connect("move_completed", self, "move_completed")
+	make_move()
+
+
+func make_move():
+	# First move
+	if last_move < 0:
+		if stacks[0].size() % 2 == 0:
+			move_disc(0, 1)
+		else:
+			move_disc(0, 2)
+	else:
+		# Pick smallest disc that was not just moved
+		var smallest_value = INF
+		var smallest_idx = 0
+		var empty_idx = -1
+		var larger_value = INF
+		var larger_idx = -1
+		# Scan stacks
+		for i in 3:
+			# Find empty peg
+			if stacks[i].size() == 0:
+				empty_idx = i
+				continue
+			# Find smallest disc
+			var v = stacks[i][-1]
+			if i != last_move:
+				if v < smallest_value:
+					smallest_idx = i
+					smallest_value = v
+		if empty_idx >= 0:
+			# Move to empty peg
+			move_disc(smallest_idx, empty_idx)
+			return
+		# Find next smallest disc
+		for i in 3:
+			var v = stacks[i][-1]
+			if v > smallest_value and v < larger_value:
+				larger_value = v
+				larger_idx = i
+		# Place on larger disc
+		move_disc(smallest_idx, larger_idx)
 
 
 func move_completed():
-	step += 1
-	if step == 1:
-		move_disc(1, 0)
+	if stacks[2].size() < NUM_DISCS:
+		make_move()
 
 
 func create_discs():
@@ -38,6 +80,7 @@ func build_stack(n):
 		peg.height = peg_length
 	# discs[0] is the smallest disc
 	for i in n:
+		stacks[0].append(n - i)
 		var d = discs[n - i - 1]
 		d.translation.y = get_y_position_in_stack(i)
 		$Pegs/Peg1.add_child(d)
@@ -54,6 +97,8 @@ var peg_length
 const SPEED = 20.0
 
 func move_disc(from_peg, to_peg):
+	stacks[to_peg].append(stacks[from_peg].pop_back())
+	last_move = to_peg
 	# Get top-most disc
 	var start_peg = $Pegs.get_child(from_peg)
 	disc = start_peg.get_children()[-1]
@@ -84,5 +129,5 @@ func move_vertically(y):
 
 func move_in_arc(phi):
 	var x = end_pos.x * (1 - cos(phi)) / 2
-	var y = end_pos.x / 2 * sin(phi) + start_pos.y
+	var y = end_pos.x / 3 * sin(phi) + start_pos.y
 	disc.translation = Vector3(x, y, 0)
