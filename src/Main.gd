@@ -2,64 +2,41 @@ extends Spatial
 
 signal move_completed
 
-const NUM_DISCS = 3
+const NUM_DISCS = 8
+const SPEED = 20.0
+
+enum { SRC, AUX, DEST }
 
 var disc_scene = preload("res://Disc.tscn")
 var discs = []
 var stack_offset
-var stacks = [[], [], []]
-var last_move = -1
+var move_number = 0
+var moves = []
 var paused = false
+var start_pos
+var end_pos
+var disc
+var peg_length
 
 func _ready():
 	create_discs()
 	build_stack(NUM_DISCS)
-	var _e = connect("move_completed", self, "move_completed")
+	var _e = connect("move_completed", self, "make_move")
+	hanoi(NUM_DISCS, SRC, DEST, AUX)
 	make_move()
 
 
+func hanoi(n, src, dest, aux):
+	if n == 0: return
+	hanoi(n - 1, src, aux, dest)
+	moves.append([src, dest])
+	hanoi(n - 1, aux, dest, src)
+
+
 func make_move():
-	# First move
-	if last_move < 0:
-		if stacks[0].size() % 2 == 0:
-			move_disc(0, 1)
-		else:
-			move_disc(0, 2)
-	else:
-		# Pick smallest disc that was not just moved
-		var smallest_value = INF
-		var smallest_idx = 0
-		var empty_idx = -1
-		var next_value = INF
-		var next_idx = -1
-		# Scan stacks
-		for i in 3:
-			# Find empty peg
-			if stacks[i].size() == 0:
-				empty_idx = i
-				continue
-			# Find smallest disc
-			var v = stacks[i][-1]
-			if i != last_move:
-				if v < smallest_value:
-					smallest_idx = i
-					smallest_value = v
-		# Find next smallest disc
-		for i in 3:
-			if i != empty_idx:
-				var v = stacks[i][-1]
-				if v > smallest_value and v < next_value:
-					next_value = v
-					next_idx = i
-		if next_idx < 0:
-			next_idx = empty_idx
-		# Place on larger disc
-		move_disc(smallest_idx, next_idx)
-
-
-func move_completed():
-	if stacks[2].size() < NUM_DISCS and not paused:
-		make_move()
+	if move_number < moves.size() and  not paused:
+		move_disc(moves[move_number])
+		move_number += 1
 
 
 func create_discs():
@@ -80,7 +57,6 @@ func build_stack(n):
 		peg.height = peg_length
 	# discs[0] is the smallest disc
 	for i in n:
-		stacks[0].append(n - i)
 		var d = discs[n - i - 1]
 		d.translation.y = get_y_position_in_stack(i)
 		$Pegs/Peg1.add_child(d)
@@ -89,18 +65,10 @@ func build_stack(n):
 func get_y_position_in_stack(disc_index): # 0 is the base, 1, 2, 3 ...
 	return 0.25 * disc_index - stack_offset
 
-var start_pos
-var end_pos
-var disc
-var peg_length
 
-const SPEED = 20.0
-
-func move_disc(from_peg, to_peg):
-	stacks[to_peg].append(stacks[from_peg].pop_back())
-	last_move = to_peg
+func move_disc(from_to):
 	# Get top-most disc
-	var start_peg = $Pegs.get_child(from_peg)
+	var start_peg = $Pegs.get_child(from_to[0])
 	disc = start_peg.get_children()[-1]
 	var tween = get_node("Tween")
 	# Move to top of pole
@@ -109,7 +77,7 @@ func move_disc(from_peg, to_peg):
 	tween.start()
 	yield(tween, "tween_completed")
 	start_pos = disc.translation
-	var end_peg = $Pegs.get_child(to_peg)
+	var end_peg = $Pegs.get_child(from_to[1])
 	end_pos = Vector2(end_peg.translation.x - start_peg.translation.x, get_y_position_in_stack(end_peg.get_child_count()))
 	var angle = PI if end_pos.x > 0 else -PI
 	_tweenBool = tween.interpolate_method(self, "move_in_arc", 0.0, angle, angle * end_pos.x / SPEED, Tween.TRANS_LINEAR, Tween.EASE_OUT_IN)
