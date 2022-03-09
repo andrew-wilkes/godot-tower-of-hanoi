@@ -29,7 +29,6 @@ func start():
 	moves.clear()
 	completed = false
 	hanoi(num_discs, SRC, DEST, AUX)
-	$UI/HBox/NumMoves.text = str(moves.size())
 	move_number = 0
 	make_move()
 
@@ -48,6 +47,7 @@ func make_move():
 	elif move_number < moves.size():
 		move_disc(moves[move_number])
 		move_number += 1
+		$UI/HBox/NumMoves.text = "Move %d of %d" % [move_number, moves.size()]
 	else:
 		completed = true
 

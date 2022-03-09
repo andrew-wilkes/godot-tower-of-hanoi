@@ -50,10 +50,10 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-margin_left = -354.0
-margin_top = -70.0
-margin_right = 354.0
-margin_bottom = -30.0
+margin_left = -277.0
+margin_top = -71.0
+margin_right = 219.0
+margin_bottom = -31.0
 custom_constants/separation = 20
 __meta__ = {
 "_edit_use_anchors_": false
@@ -82,20 +82,10 @@ min_value = 1.0
 max_value = 8.0
 value = 8.0
 
-[node name="Label3" type="Label" parent="UI/HBox"]
+[node name="NumMoves" type="Label" parent="UI/HBox"]
 margin_left = 300.0
 margin_top = 13.0
-margin_right = 419.0
-margin_bottom = 27.0
-text = "Number of moves:"
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="NumMoves" type="Label" parent="UI/HBox"]
-margin_left = 439.0
-margin_top = 13.0
-margin_right = 447.0
+margin_right = 308.0
 margin_bottom = 27.0
 text = "0"
 __meta__ = {
@@ -103,8 +93,8 @@ __meta__ = {
 }
 
 [node name="Speed" type="HSlider" parent="UI/HBox"]
-margin_left = 467.0
-margin_right = 547.0
+margin_left = 328.0
+margin_right = 408.0
 margin_bottom = 40.0
 rect_min_size = Vector2( 80, 0 )
 hint_tooltip = "Speed"
